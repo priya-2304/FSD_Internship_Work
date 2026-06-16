@@ -1,0 +1,1 @@
+export function highlight(t,k){if(!k)return t;return t.replace(new RegExp('('+k+')','gi'),'<mark>$1</mark>');}

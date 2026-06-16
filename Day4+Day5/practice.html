@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+<input type="text" id="inp" placeholder="Type here">
+<button id = "btn">CLICK ME</button>
+<ul id="list1">
+
+</ul>
+
+<script>
+const inp = document.getElementById("inp");
+const btn = document.getElementById("btn");
+const list = document.getElementById("list1");
+
+btn.addEventListener("click", () => {
+    const task = inp.value;
+     
+    if (task != "") {
+     const li = document.createElement("li");
+      li.textContent = task;
+        list.append(li);
+        inp.value = "";
+}});
+
+</script>
+</body>
+</html>
+

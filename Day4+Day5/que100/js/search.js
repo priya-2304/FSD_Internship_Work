@@ -1,0 +1,1 @@
+export const filterNotes=(notes,q)=>notes.filter(n=>(n.title+n.content+n.tags.join(' ')).toLowerCase().includes(q.toLowerCase()));

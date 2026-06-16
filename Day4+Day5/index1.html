@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    <h1> My college is very good..</h1>
+    <h1>Parveen is nice player</h1>
+    <button class = "btn">Submit</button>
+
+    <div id = "box"></div>
+    <ul id = "list1">  
+    </ul>
+    <h1 id ="head">My name is priya</h1>
+    
+    <button id="click"> CLICK ME</button>
+
+    <script> 
+        // selecting all 
+        const heading = document.querySelectorAll("h1");
+        console.log(heading);
+        // selecting One
+        const btn = document.querySelector(".btn");
+        console.log(btn);
+        console.log(btn.parentElement);
+
+        const head = document.getElementById("head");
+        // for changing text content
+        head.textContent = "This is updated text";
+        console.log(head);
+        // innerhtml
+        const box = document.getElementById("box");
+        box.innerHTML = `<p> hello my name is priya , i play badminton , i am 18 years young </p><br><button>submit Now</button>`;
+        // CreateElement
+        const list1 = document.getElementById("list1");
+        const li = document.createElement("li");
+        li.textContent = "my name is prachi";
+        list1.appendChild(li);
+        // AddEventlistener
+        const btn1 = document.getElementById("click");
+        click.addEventListener(
+            "hover" ,()=>{
+                console.log("bro mne button press krdia");
+            }   )
+    </script>
+</body>
+</html>

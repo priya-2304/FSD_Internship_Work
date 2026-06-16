@@ -1,0 +1,2179 @@
+<!-- Q36. Event Delegation implement karo
+ul pe sirf ek listener. Kisi bhi li click par text log ho.
+Dynamically add hone wale li bhi handle hon.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<ul>
+  <li>Apple</li>
+  <li>Mango</li>
+</ul>
+
+<script>
+const ul = document.querySelector("ul");
+
+ul.addEventListener("click", (e) => {
+  if (e.target.tagName === "LI") {
+    console.log(e.target.textContent);
+  }
+});
+</script>
+
+</body>
+</html>
+
+
+
+<!-- Q37. DOM Manipulation
+querySelector se paragraph ka text aur background change karo.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<p id="para">Hello World</p>
+
+<script>
+const p = document.querySelector("#para");
+
+p.textContent = "Text Changed";
+p.style.backgroundColor = "yellow";
+</script>
+
+</body>
+</html>
+
+
+
+<!-- Q38. Virtual DOM
+JS object ko createElement se real DOM me convert karo.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<script>
+function render(vNode) {
+  const el = document.createElement(vNode.tag);
+
+  if (vNode.text) {
+    el.textContent = vNode.text;
+  }
+
+  if (vNode.children) {
+    vNode.children.forEach(child =>
+      el.appendChild(render(child))
+    );
+  }
+
+  return el;
+}
+
+const tree = {
+  tag: "div",
+  children: [
+    { tag: "span", text: "Hello" }
+  ]
+};
+
+document.body.appendChild(render(tree));
+</script>
+
+</body>
+</html>
+
+
+<!-- Q39. Form Validation
+Submit default rokko.
+Name + Email validate karo.
+Error message show karo.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<form id="form">
+    <input type="text" id="name" placeholder="Name">
+    <span id="nameErr"></span>
+
+    <br><br>
+
+    <input type="email" id="email" placeholder="Email">
+    <span id="emailErr"></span>
+
+    <br><br>
+
+    <button>Submit</button>
+</form>
+
+<script>
+form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    nameErr.textContent = "";
+    emailErr.textContent = "";
+
+    if(!name.value.trim()){
+        nameErr.textContent = "Name Required";
+    }
+
+    if(!email.value.trim()){
+        emailErr.textContent = "Email Required";
+    }
+});
+</script>
+
+</body>
+</html>
+
+
+
+<!-- Q40. Drag & Drop Reorder
+dragstart, dragover, drop use karo.
+Order localStorage me save karo.
+Reload par restore karo.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<ul id="list">
+    <li draggable="true">Item 1</li>
+    <li draggable="true">Item 2</li>
+    <li draggable="true">Item 3</li>
+</ul>
+
+<script>
+let dragged;
+
+list.addEventListener("dragstart", e => {
+    dragged = e.target;
+});
+
+list.addEventListener("dragover", e => {
+    e.preventDefault();
+});
+
+list.addEventListener("drop", e => {
+    if(e.target.tagName === "LI"){
+        list.insertBefore(dragged, e.target);
+
+        localStorage.setItem(
+            "order",
+            JSON.stringify(
+                [...list.children].map(li => li.innerText)
+            )
+        );
+    }
+});
+</script>
+
+</body>
+</html>
+
+
+
+<!-- Q41. localStorage Wrapper Class
+get(), set(), remove(), clear()
+TTL support bhi do.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<script>
+class Storage {
+
+    set(key, value){
+        localStorage.setItem(
+            key,
+            JSON.stringify(value)
+        );
+    }
+
+    get(key){
+        return JSON.parse(
+            localStorage.getItem(key)
+        );
+    }
+
+    remove(key){
+        localStorage.removeItem(key);
+    }
+
+    clear(){
+        localStorage.clear();
+    }
+}
+
+const store = new Storage();
+
+store.set("name","Nera");
+console.log(store.get("name"));
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q42. Do counters banao
+
+1) sessionStorage counter — reload par reset
+2) localStorage counter — reload par persist
+
+Dono UI mein clearly alag dikhao.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Storage Counters</title>
+</head>
+<body>
+
+<h2>Session Counter: <span id="session">0</span></h2>
+<button onclick="sessionCount()">Session +1</button>
+
+<h2>Local Counter: <span id="local">0</span></h2>
+<button onclick="localCount()">Local +1</button>
+
+<script>
+let s = sessionStorage.getItem("session") || 0;
+let l = localStorage.getItem("local") || 0;
+
+document.getElementById("session").innerText = s;
+document.getElementById("local").innerText = l;
+
+function sessionCount(){
+    s++;
+    sessionStorage.setItem("session", s);
+    document.getElementById("session").innerText = s;
+}
+
+function localCount(){
+    l++;
+    localStorage.setItem("local", l);
+    document.getElementById("local").innerText = l;
+}
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q43. MutationObserver se selective DOM logger banao
+
+Requirements:
+1. Naye nodes add hone par log karo.
+2. Sirf agar data-track attribute ho.
+3. Cleanup bhi karo.
+4. observer disconnect karo jab zaroorat na ho.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mutation Observer</title>
+</head>
+<body>
+
+<button id="add">Add Node</button>
+<button id="stop">Disconnect</button>
+
+<div id="container"></div>
+
+<script>
+const observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+            if(node.dataset && node.dataset.track){
+                console.log("Tracked Node Added:", node);
+            }
+        });
+    });
+});
+
+observer.observe(document.getElementById("container"), {
+    childList: true
+});
+
+document.getElementById("add").onclick = () => {
+    const div = document.createElement("div");
+    div.setAttribute("data-track", "true");
+    div.innerText = "New Node";
+    document.getElementById("container").appendChild(div);
+};
+
+document.getElementById("stop").onclick = () => {
+    observer.disconnect();
+};
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q44. Image gallery banao
+
+Requirements:
+1. Zero CSS frameworks
+2. Thumbnails click par large preview dikhao
+3. Next / Prev navigation buttons
+4. Keyboard arrows support karo
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Gallery</title>
+</head>
+<body>
+
+<img id="preview" src="https://picsum.photos/id/101/400/250" width="400">
+
+<br><br>
+
+<button onclick="prev()">Prev</button>
+<button onclick="next()">Next</button>
+
+<br><br>
+
+<img src="https://picsum.photos/id/101/100/60" onclick="show(0)">
+<img src="https://picsum.photos/id/102/100/60" onclick="show(1)">
+<img src="https://picsum.photos/id/103/100/60" onclick="show(2)">
+
+<script>
+const images = [
+    "https://picsum.photos/id/101/400/250",
+    "https://picsum.photos/id/102/400/250",
+    "https://picsum.photos/id/103/400/250"
+];
+
+let current = 0;
+
+function show(i){
+    current = i;
+    document.getElementById("preview").src = images[current];
+}
+
+function next(){
+    current = (current + 1) % images.length;
+    show(current);
+}
+
+function prev(){
+    current = (current - 1 + images.length) % images.length;
+    show(current);
+}
+
+document.addEventListener("keydown", e => {
+    if(e.key === "ArrowRight") next();
+    if(e.key === "ArrowLeft") prev();
+});
+</script>
+
+</body>
+</html>
+
+
+
+<!--
+Q45. PubSub module banao using closures
+
+Requirements:
+1. subscribe(event, fn)
+2. publish(event, data)
+3. unsubscribe(event, fn)
+4. DOM events pe nahi — internal event bus
+5. Memory leak avoid karo
+6. Proper unsubscribe test karo
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PubSub Module</title>
+</head>
+<body>
+
+<script>
+const PubSub = (() => {
+
+    const events = {};
+
+    return {
+
+        subscribe(event, fn){
+            if(!events[event]){
+                events[event] = [];
+            }
+
+            events[event].push(fn);
+        },
+
+        publish(event, data){
+            if(events[event]){
+                events[event].forEach(fn => fn(data));
+            }
+        },
+
+        unsubscribe(event, fn){
+            if(events[event]){
+                events[event] =
+                    events[event].filter(f => f !== fn);
+            }
+        }
+
+    };
+
+})();
+
+function handler(data){
+    console.log("Received:", data);
+}
+
+PubSub.subscribe("message", handler);
+
+PubSub.publish("message", "Hello");
+
+PubSub.unsubscribe("message", handler);
+
+PubSub.publish("message", "This will not run");
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q46. DOM traversal utility banao
+
+1. getSiblings(el) — saare siblings
+2. getAncestors(el) — parent chain
+3. getAllDescendants(el) — sab children recursively
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DOM Traversal Utility</title>
+</head>
+<body>
+
+<div id="grandparent">
+    <div id="parent">
+        <p>Child 1</p>
+        <p id="target">Child 2</p>
+        <p>Child 3</p>
+    </div>
+</div>
+
+<script>
+function getSiblings(el){
+    return [...el.parentElement.children]
+           .filter(e => e !== el);
+}
+
+function getAncestors(el){
+    const arr = [];
+
+    while(el.parentElement){
+        arr.push(el.parentElement);
+        el = el.parentElement;
+    }
+
+    return arr;
+}
+
+function getAllDescendants(el){
+    let arr = [];
+
+    [...el.children].forEach(child => {
+        arr.push(child);
+        arr.push(...getAllDescendants(child));
+    });
+
+    return arr;
+}
+
+const target = document.getElementById("target");
+
+console.log(getSiblings(target));
+console.log(getAncestors(target));
+console.log(getAllDescendants(document.getElementById("grandparent")));
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q47. debounce aur throttle dono banao
+
+1. debounce(fn, ms)
+   - window resize pe lagao
+   - 300ms baad fire ho
+
+2. throttle(fn, ms)
+   - mousemove pe lagao
+
+3. Dono ka behavior side by side demo karo
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Debounce & Throttle</title>
+</head>
+<body>
+
+<h2>Resize Window (Debounce)</h2>
+<p id="debounceResult">Waiting...</p>
+
+<h2>Move Mouse (Throttle)</h2>
+<p id="throttleResult">Waiting...</p>
+
+<script>
+function debounce(fn, ms){
+    let timer;
+
+    return function(){
+        clearTimeout(timer);
+
+        timer = setTimeout(() => {
+            fn();
+        }, ms);
+    };
+}
+
+function throttle(fn, ms){
+    let last = 0;
+
+    return function(){
+        let now = Date.now();
+
+        if(now - last >= ms){
+            last = now;
+            fn();
+        }
+    };
+}
+
+window.addEventListener(
+    "resize",
+    debounce(() => {
+        document.getElementById("debounceResult")
+            .innerText =
+            "Debounce Fired: " + new Date().toLocaleTimeString();
+    }, 300)
+);
+
+document.addEventListener(
+    "mousemove",
+    throttle(() => {
+        document.getElementById("throttleResult")
+            .innerText =
+            "Throttle Fired: " + new Date().toLocaleTimeString();
+    }, 300)
+);
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q48. Keyboard shortcut system banao
+
+Ctrl+S → Saved!
+Ctrl+Z → Undo!
+Escape → Cancelled
+
+keydown event use karo.
+Shortcuts easily add/remove ho sakein.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Keyboard Shortcuts</title>
+</head>
+<body>
+
+<h2 id="msg">Press Shortcut</h2>
+
+<script>
+const shortcuts = {
+    "Ctrl+s": () => show("Saved!"),
+    "Ctrl+z": () => show("Undo!"),
+    "Escape": () => show("Cancelled")
+};
+
+function show(text){
+    document.getElementById("msg").innerText = text;
+}
+
+document.addEventListener("keydown", e => {
+
+    let key = e.ctrlKey
+        ? `Ctrl+${e.key.toLowerCase()}`
+        : e.key;
+
+    if(shortcuts[key]){
+        e.preventDefault();
+        shortcuts[key]();
+    }
+});
+
+// Add Shortcut
+shortcuts["Ctrl+d"] = () => show("Deleted");
+
+// Remove Shortcut
+delete shortcuts["Ctrl+d"];
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q49. Lazy image loader banao
+
+1. IntersectionObserver use karo.
+2. data-src → src sirf jab element viewport mein aaye.
+3. Placeholder/blur pehle dikhe.
+4. Real image load hone ke baad swap karo.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lazy Loader</title>
+</head>
+<body>
+
+<img
+src="https://via.placeholder.com/300x200?text=Loading..."
+data-src="https://picsum.photos/300/200"
+width="300"
+height="200"
+>
+
+<br><br><br><br><br><br><br><br><br><br>
+<br><br><br><br><br><br><br><br><br><br>
+
+<script>
+const img = document.querySelector("img");
+
+const observerr = new IntersectionObserver(entries => {
+
+    entries.forEach(entry => {
+
+        if(entry.isIntersecting){
+
+            const realImg = new Image();
+
+            realImg.src = img.dataset.src;
+
+            realImg.onload = () => {
+                img.src = realImg.src;
+            };
+
+            observer.unobserve(img);
+        }
+
+    });
+
+});
+
+observer.observe(img);
+</script>
+
+</body>
+</html>
+
+<!--
+Q50. Dynamic table banao
+
+1. createElement + appendChild use karo.
+2. No innerHTML.
+3. Data: array of {name, age, city}.
+4. Header row bhi dynamically banao.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dynamic Table</title>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script>
+const data = [
+    {name:"Nera", age:20, city:"Delhi"},
+    {name:"Priya", age:22, city:"Mumbai"},
+    {name:"Ravi", age:25, city:"Pune"}
+];
+
+const table = document.createElement("table");
+table.border = "1";
+
+const headerRow = document.createElement("tr");
+
+["Name","Age","City"].forEach(text => {
+    const th = document.createElement("th");
+    th.textContent = text;
+    headerRow.appendChild(th);
+});
+
+table.appendChild(headerRow);
+
+data.forEach(user => {
+
+    const tr = document.createElement("tr");
+
+    Object.values(user).forEach(value => {
+        const td = document.createElement("td");
+        td.textContent = value;
+        tr.appendChild(td);
+    });
+
+    table.appendChild(tr);
+});
+
+document.getElementById("root")
+        .appendChild(table);
+</script>
+
+</body>
+</html>
+
+
+<!-- Q66. Accordion component banao
+
+1. Click par section expand/collapse.
+2. Ek waqt mein sirf ek section open.
+3. Smooth CSS transition.
+4. Zero JS animation libraries. -->
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+.content{
+    max-height:0;
+    overflow:hidden;
+    transition:0.3s;
+}
+
+.show{
+    max-height:100px;
+}
+</style>
+</head>
+<body>
+
+<button class="btn">Section 1</button>
+<div class="content">Content 1</div>
+
+<button class="btn">Section 2</button>
+<div class="content">Content 2</div>
+
+<button class="btn">Section 3</button>
+<div class="content">Content 3</div>
+
+<script>
+let btns = document.querySelectorAll(".btn");
+let contents = document.querySelectorAll(".content");
+
+btns.forEach((btn,index)=>{
+
+    btn.onclick = ()=>{
+
+        contents.forEach(c=>c.classList.remove("show"));
+
+        contents[index].classList.add("show");
+    };
+
+});
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q67. Modal class banao
+
+new Modal({ title, content, onClose })
+
+1. DOM mein inject ho.
+2. Close: Escape key, backdrop click, X button.
+3. Focus trap: Tab key modal ke andar hi ghume.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Modal</title>
+<style>
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.5);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+.box{
+    background:white;
+    padding:20px;
+}
+</style>
+</head>
+<body>
+
+<button id="open">Open Modal</button>
+
+<script>
+class Modal{
+
+    constructor({title,content,onClose}){
+
+        this.onClose = onClose;
+
+        this.modal = document.createElement("div");
+        this.modal.className = "modal";
+
+        this.modal.innerHTML = `
+            <div class="box">
+                <button id="close">X</button>
+                <h2>${title}</h2>
+                <p>${content}</p>
+                <button>OK</button>
+            </div>
+        `;
+
+        document.body.appendChild(this.modal);
+
+        const focusables =
+            this.modal.querySelectorAll("button");
+
+        this.modal.addEventListener("keydown",e=>{
+            if(e.key==="Tab"){
+                e.preventDefault();
+                focusables[1].focus();
+            }
+        });
+
+        this.modal.querySelector("#close")
+            .onclick=()=>this.close();
+
+        this.modal.onclick=e=>{
+            if(e.target===this.modal){
+                this.close();
+            }
+        };
+
+        document.addEventListener("keydown",
+            this.esc=(e)=>{
+                if(e.key==="Escape"){
+                    this.close();
+                }
+            }
+        );
+    }
+
+    close(){
+        this.modal.remove();
+        document.removeEventListener("keydown",this.esc);
+        if(this.onClose) this.onClose();
+    }
+}
+
+document.getElementById("open").onclick=()=>{
+    new Modal({
+        title:"Hello",
+        content:"Modal Content",
+        onClose:()=>console.log("Closed")
+    });
+};
+</script>
+
+</body>
+</html>
+
+<!-- /*
+Q68. Infinite scroll
+
+Bottom se 150px pehle data fetch ho.
+Loading spinner dikhao.
+*/ -->
+<sript>
+window.addEventListener("scroll", () => {
+
+    if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 150){
+
+        loading.hidden = false;
+
+        setTimeout(() => {
+            list.innerHTML += "<p>New Data</p>";
+            loading.hidden = true;
+        }, 1000);
+    }
+
+});
+
+</sript>
+
+
+<!--
+Q69. Client-side Router banao
+
+1. navigate(path)
+2. back()
+3. on(path, handler)
+
+Browser back/forward handle karo.
+No page reload.
+Route params support karo.
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Router</title>
+</head>
+<body>
+<a href="/home" onclick="go(event,'/home')">Home</a>
+<a href="/user/101" onclick="go(event,'/user/101')">User</a>
+
+<h2 id="app"></h2>
+
+<script>
+class Router{
+
+    constructor(){
+        this.routes = [];
+
+        window.addEventListener(
+            "popstate",
+            ()=>this.resolve()
+        );
+    }
+
+    on(path,handler){
+        this.routes.push({path,handler});
+    }
+
+    navigate(path){
+        history.pushState({},'',path);
+        this.resolve();
+    }
+
+    back(){
+        history.back();
+    }
+
+    resolve(){
+
+        let url = location.pathname;
+
+        this.routes.forEach(route=>{
+
+            let keys = [];
+
+            let pattern =
+                route.path.replace(
+                    /:([^/]+)/g,
+                    (_,k)=>{
+                        keys.push(k);
+                        return "([^/]+)";
+                    }
+                );
+
+            let match =
+                url.match(
+                    new RegExp("^"+pattern+"$")
+                );
+
+            if(match){
+
+                let params = {};
+
+                keys.forEach((k,i)=>{
+                    params[k] = match[i+1];
+                });
+
+                route.handler(params);
+            }
+
+        });
+    }
+}
+
+const router = new Router();
+
+router.on("/home",()=>{
+    app.textContent = "Home Page";
+});
+
+router.on("/user/:id",(p)=>{
+    app.textContent =
+        "User ID = " + p.id;
+});
+
+function go(e,path){
+    e.preventDefault();
+    router.navigate(path);
+}
+
+router.resolve();
+</script>
+
+</body>
+</html>
+
+<!--
+Q73. DOM diffing function banao
+
+diff(oldVNode, newVNode)
+
+Virtual trees compare karo.
+Sirf changed parts update karo.
+Real DOM pe minimal patch apply karo.
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DOM Diffing</title>
+</head>
+<body>
+
+<div id="app">Hello</div>
+
+<script>
+function diff(oldVNode,newVNode,el){
+
+    if(oldVNode !== newVNode){
+        el.textContent = newVNode;
+    }
+
+}
+
+diff(
+    "Hello",
+    "Hello World",
+    document.getElementById("app")
+);
+</script>
+
+</body>
+</html>
+
+
+
+<!--
+Q75. Toast notification system banao
+
+toast.show(message,type,durationMs)
+
+Types:
+success / error / warning
+
+Auto-dismiss + manual close.
+Multiple toasts stack hon.
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Toast</title>
+
+<style>
+#toasts div{
+    margin:5px;
+    padding:10px;
+    color:white;
+}
+</style>
+
+</head>
+<body>
+
+<div id="toasts"></div>
+
+<button onclick="
+toast.show(
+'Saved',
+'success',
+3000
+)">
+Show Toast
+</button>
+
+<script>
+const toast = {
+
+show(msg,type,time){
+
+    const t =
+    document.createElement("div");
+
+    t.style.background =
+        type==="success"
+        ? "green"
+        : type==="error"
+        ? "red"
+        : "orange";
+
+    t.innerHTML =
+    msg +
+    ' <button>x</button>';
+
+    toasts.appendChild(t);
+
+    t.querySelector("button")
+     .onclick = ()=>t.remove();
+
+    setTimeout(
+        ()=>t.remove(),
+        time
+    );
+}
+
+};
+</script>
+
+</body>
+</html>
+
+<!--
+Q78. Vanilla JS To-Do App
+
+• Add, delete, mark done, edit in-place
+• Filter: All / Active / Done
+• localStorage persist
+• Zero libraries — zero frameworks
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>ToDo App</title>
+</head>
+<body>
+
+<input id="inp">
+<button onclick="addTodo()">Add</button>
+
+<button onclick="filterTodo('all')">All</button>
+<button onclick="filterTodo('active')">Active</button>
+<button onclick="filterTodo('done')">Done</button>
+
+<ul id="list"></ul>
+
+<script>
+let todos =
+JSON.parse(
+localStorage.getItem("todos")
+) || [];
+
+function save(){
+ localStorage.setItem(
+  "todos",
+  JSON.stringify(todos)
+ );
+}
+
+function render(type="all"){
+
+ list.innerHTML="";
+
+ todos
+ .filter(t=>
+  type==="all" ||
+  (type==="active"&&!t.done) ||
+  (type==="done"&&t.done)
+ )
+ .forEach((t,i)=>{
+
+  let li =
+  document.createElement("li");
+
+  li.innerHTML=`
+  <span onclick="toggle(${i})">
+  ${t.done?"✔ ":""}
+  ${t.text}
+  </span>
+
+  <button onclick="editTodo(${i})">
+  Edit
+  </button>
+
+  <button onclick="deleteTodo(${i})">
+  X
+  </button>
+  `;
+
+  list.appendChild(li);
+ });
+}
+
+function addTodo(){
+
+ if(!inp.value) return;
+
+ todos.push({
+  text:inp.value,
+  done:false
+ });
+
+ inp.value="";
+
+ save();
+ render();
+}
+
+function toggle(i){
+ todos[i].done=!todos[i].done;
+ save();
+ render();
+}
+
+function deleteTodo(i){
+ todos.splice(i,1);
+ save();
+ render();
+}
+
+function editTodo(i){
+
+ let v =
+ prompt("Edit",todos[i].text);
+
+ if(v){
+  todos[i].text=v;
+  save();
+  render();
+ }
+}
+
+function filterTodo(type){
+ render(type);
+}
+
+render();
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q79. Live DOM Inspector
+
+Kisi bhi element pe hover karo toh
+floating panel mein dikhao:
+
+1. tag name
+2. id
+3. class list
+4. innerHTML length
+
+Element ko visually highlight bhi karo.
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>DOM Inspector</title>
+
+<style>
+#info{
+ position:fixed;
+ top:10px;
+ right:10px;
+ background:#eee;
+ padding:10px;
+}
+</style>
+
+</head>
+<body>
+
+<h1 id="title">
+Hello World
+</h1>
+
+<p class="demo">
+Hover Me
+</p>
+
+<div id="info">
+Hover Element
+</div>
+
+<script>
+document.addEventListener(
+"mouseover",
+e=>{
+
+ e.target.style.outline =
+ "2px solid red";
+
+ info.innerHTML = `
+ Tag:
+ ${e.target.tagName}<br>
+
+ ID:
+ ${e.target.id}<br>
+
+ Class:
+ ${e.target.className}<br>
+
+ Length:
+ ${e.target.innerHTML.length}
+ `;
+});
+
+document.addEventListener(
+"mouseout",
+e=>{
+ e.target.style.outline="";
+});
+</script>
+
+</body>
+</html>
+
+<!--
+Q81. Custom EventTarget polyfill banao
+
+Bina browser API ke likho:
+
+1. addEventListener()
+2. removeEventListener()
+3. dispatchEvent()
+
+Custom Event objects with
+detail property support karo.
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Custom EventTarget</title>
+</head>
+<body>
+
+<script>
+class EventTargetPolyfill{
+
+ constructor(){
+  this.events = {};
+ }
+
+ addEventListener(type,fn){
+
+  if(!this.events[type]){
+   this.events[type] = [];
+  }
+
+  this.events[type].push(fn);
+ }
+
+ removeEventListener(type,fn){
+
+  if(this.events[type]){
+
+   this.events[type] =
+   this.events[type]
+   .filter(f => f !== fn);
+  }
+ }
+
+ dispatchEvent(event){
+
+  if(this.events[event.type]){
+
+   this.events[event.type]
+   .forEach(fn => fn(event));
+  }
+ }
+
+}
+
+const emitter =
+new EventTargetPolyfill();
+
+function handler(e){
+ console.log(e.detail);
+}
+
+emitter.addEventListener(
+"message",
+handler
+);
+
+emitter.dispatchEvent({
+ type:"message",
+ detail:"Hello World"
+});
+
+emitter.removeEventListener(
+"message",
+handler
+);
+
+emitter.dispatchEvent({
+ type:"message",
+ detail:"Not Printed"
+});
+</script>
+
+</body>
+</html>
+
+<!--
+Q82. Live search with text highlight banao
+
+Input type karo → list realtime filter ho.
+
+Matching characters highlight
+(bold/color) karo.
+
+300ms debounce lagao.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<input id="search" placeholder="Search">
+
+<ul id="list">
+    <li>Apple</li>
+    <li>Banana</li>
+    <li>Mango</li>
+    <li>Orange</li>
+</ul>
+
+<script>
+function debounce(fn,ms){
+
+    let timer;
+
+    return function(){
+
+        clearTimeout(timer);
+
+        timer =
+        setTimeout(fn,ms);
+    };
+}
+
+search.addEventListener(
+"input",
+
+debounce(()=>{
+
+    let val =
+    search.value.toLowerCase();
+
+    document
+    .querySelectorAll("#list li")
+    .forEach(li=>{
+
+        let text =
+        li.textContent;
+
+        if(
+            text.toLowerCase()
+            .includes(val)
+        ){
+
+            li.style.display="";
+
+            li.innerHTML =
+            text.replace(
+                new RegExp(val,"ig"),
+                m =>
+                `<b style="color:red">
+                ${m}
+                </b>`
+            );
+
+        }else{
+
+            li.style.display="none";
+        }
+
+    });
+
+},300)
+
+);
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q83. Live search with text highlight banao
+
+Input type karo → list realtime filter ho.
+
+Matching characters highlight
+(bold/color) karo.
+
+300ms debounce lagao.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<input id="search">
+
+<ul id="list">
+ <li>Apple</li>
+ <li>Banana</li>
+ <li>Mango</li>
+ <li>Orange</li>
+</ul>
+
+<script>
+const items =
+[...document.querySelectorAll("li")];
+
+function debounce(fn,ms){
+
+ let timer;
+
+ return (...args)=>{
+
+  clearTimeout(timer);
+
+  timer =
+  setTimeout(
+   ()=>fn(...args),
+   ms
+  );
+ };
+}
+
+search.addEventListener(
+"input",
+
+debounce(()=>{
+
+ let val =
+ search.value.toLowerCase();
+
+ items.forEach(li=>{
+
+  let text =
+  li.textContent;
+
+  if(
+   text.toLowerCase()
+   .includes(val)
+  ){
+
+   li.style.display="";
+
+   li.innerHTML =
+   text.replace(
+    new RegExp(val,"ig"),
+    m=>`<b>${m}</b>`
+   );
+
+  }else{
+
+   li.style.display="none";
+  }
+
+ });
+
+},300)
+
+);
+</script>
+
+</body>
+</html>
+
+<!--
+Q86. SortableTable class banao
+
+Column header click par
+ascending/descending sort toggle.
+
+Data array se render ho.
+
+Active sort column pe
+direction arrow dikhao.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<table border="1" id="table"></table>
+
+<script>
+class SortableTable{
+
+    constructor(data){
+
+        this.data = data;
+        this.asc = true;
+
+        this.render();
+    }
+
+    render(){
+
+        table.innerHTML = "";
+
+        let tr =
+        document.createElement("tr");
+
+        ["name","age"].forEach(col=>{
+
+            let th =
+            document.createElement("th");
+
+            th.textContent = col;
+
+            th.onclick =
+            ()=>this.sort(col);
+
+            tr.appendChild(th);
+        });
+
+        table.appendChild(tr);
+
+        this.data.forEach(row=>{
+
+            let tr =
+            document.createElement("tr");
+
+            tr.innerHTML =
+            `<td>${row.name}</td>
+             <td>${row.age}</td>`;
+
+            table.appendChild(tr);
+        });
+    }
+
+    sort(key){
+
+        this.asc = !this.asc;
+
+        this.data.sort((a,b)=>
+
+            this.asc
+            ? a[key] > b[key] ? 1 : -1
+            : a[key] < b[key] ? 1 : -1
+        );
+
+        this.render();
+
+        [...table.rows[0].cells]
+        .forEach(th=>{
+
+            if(th.textContent===key){
+
+                th.textContent +=
+                this.asc
+                ? " ↑"
+                : " ↓";
+            }
+
+        });
+    }
+}
+
+new SortableTable([
+    {name:"Nera",age:20},
+    {name:"Aman",age:18},
+    {name:"Ravi",age:25}
+]);
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q87. Clipboard copy button banao
+
+'Copy to clipboard' click karo → text copy ho.
+
+Button text:
+'Copied!' → 2 sec baad wapas.
+
+Permission deny ho toh graceful fallback.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<input id="text" value="Hello World">
+<button id="btn">Copy to Clipboard</button>
+
+<script>
+btn.onclick = async ()=>{
+
+ try{
+
+  await navigator.clipboard.writeText(
+   text.value
+  );
+
+  btn.innerText = "Copied!";
+
+  setTimeout(()=>{
+   btn.innerText =
+   "Copy to Clipboard";
+  },2000);
+
+ }catch{
+
+  text.select();
+
+  document.execCommand("copy");
+
+  alert("Copied using fallback");
+ }
+
+};
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q90. Form auto-save feature banao
+
+User type kare →
+1 sec debounce →
+localStorage save.
+
+Page aane par draft restore ho.
+
+'Draft saved at 14:32'
+indicator DOM mein dikhao.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<textarea id="msg"></textarea>
+
+<p id="status"></p>
+
+<script>
+msg.value =
+localStorage.getItem("draft")
+|| "";
+
+let timer;
+
+msg.addEventListener(
+"input",
+()=>{
+
+ clearTimeout(timer);
+
+ timer =
+ setTimeout(()=>{
+
+  localStorage.setItem(
+   "draft",
+   msg.value
+  );
+
+  let time =
+  new Date()
+  .toLocaleTimeString();
+
+  status.innerText =
+  "Draft saved at " + time;
+
+ },1000);
+
+});
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q90. Form auto-save feature banao
+
+User type kare →
+1 sec debounce →
+localStorage save.
+
+Page aane par draft restore ho.
+
+'Draft saved at 14:32'
+indicator DOM mein dikhao.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<textarea id="msg"></textarea>
+
+<p id="status"></p>
+
+<script>
+msg.value =
+localStorage.getItem("draft")
+|| "";
+
+let timerr;
+
+msg.addEventListener(
+"input",
+()=>{
+
+ clearTimeout(timer);
+
+ timer =
+ setTimeout(()=>{
+
+  localStorage.setItem(
+   "draft",
+   msg.value
+  );
+
+  let time =
+  new Date()
+  .toLocaleTimeString();
+
+  status.innerText =
+  "Draft saved at " + time;
+
+ },1000);
+
+});
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q92. Image Carousel — vanilla JS
+
+• Auto-play every 3 seconds
+• Prev / Next buttons
+• Dot indicators (clickable)
+• Keyboard arrow key support
+• localStorage mein current slide save
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<img id="img" width="300">
+
+<br><br>
+
+<button onclick="prev()">
+Prev
+</button>
+
+<button onclick="next()">
+Next
+</button>
+
+<div id="dots"></div>
+
+<script>
+const imagess = [
+ "https://picsum.photos/id/101/300/200",
+ "https://picsum.photos/id/102/300/200",
+ "https://picsum.photos/id/103/300/200"
+];
+
+let currentt =
++localStorage.getItem("slide")
+|| 0;
+
+function show(i){
+
+ current = i;
+
+ img.src = images[i];
+
+ localStorage.setItem(
+  "slide",
+  i
+ );
+
+ dots.innerHTML="";
+
+ images.forEach((_,idx)=>{
+
+  let b =
+  document.createElement("button");
+
+  b.innerText = "•";
+
+  b.onclick =
+  ()=>show(idx);
+
+  dots.appendChild(b);
+ });
+
+}
+
+function next(){
+ show(
+  (current+1)%images.length
+ );
+}
+
+function prev(){
+ show(
+  (current-1+images.length)
+  % images.length
+ );
+}
+
+document.addEventListener(
+"keydown",
+e=>{
+
+ if(e.key==="ArrowRight")
+  next();
+
+ if(e.key==="ArrowLeft")
+  prev();
+});
+
+setInterval(next,3000);
+
+show(current);
+</script>
+
+</body>
+</html>
+
+<!--
+Q93. Virtual Scroll — 10,000 items
+
+Sirf visible items DOM mein render hon.
+
+Scroll karte waqt DOM update ho.
+
+No lag.
+
+DevTools Performance tab se verify karo.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<div id="box"
+style="
+height:300px;
+overflow:auto;
+border:1px solid;
+">
+    <div id="content"></div>
+</div>
+
+<script>
+const itemss =
+Array.from(
+ {length:10000},
+ (_,i)=>"Item "+i
+);
+
+const rowHeight = 30;
+
+box.addEventListener(
+"scroll",
+render
+);
+
+function render(){
+
+ let start =
+ Math.floor(
+  box.scrollTop/rowHeight
+ );
+
+ content.innerHTML="";
+
+ for(
+  let i=start;
+  i<start+10;
+  i++
+ ){
+
+  if(itemss[i]){
+
+   let div =
+   document.createElement("div");
+
+   div.style.height =
+   rowHeight+"px";
+
+   div.innerText =
+   itemss[i];
+
+   content.appendChild(div);
+  }
+ }
+
+}
+
+render();
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q95. DOM Time Machine
+
+Har 5 seconds mein
+DOM snapshot lo (outerHTML).
+
+Undo button se
+pichla snapshot restore ho.
+
+Max 10 snapshots.
+
+Oldest automatically remove ho.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<button id="undo">
+Undo
+</button>
+
+<div id="app">
+Hello
+</div>
+
+<script>
+let history = [];
+
+setInterval(()=>{
+
+ history.push(
+  document.body.outerHTML
+ );
+
+ if(history.length>10){
+  history.shift();
+ }
+
+},5000);
+
+undo.onclick=()=>{
+
+ if(history.length){
+
+  document.body.outerHTML =
+  history.pop();
+ }
+
+};
+</script>
+
+</body>
+</html>
+
+
+<!--
+Q97. ResizeObserver se element monitor karo
+
+Width/height observe karo.
+
+Change hone par
+DOM mein live dimensions update karo.
+
+Element remove hone par
+observer disconnect karo.
+-->
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<div id="box"
+style="
+width:200px;
+height:100px;
+resize:both;
+overflow:auto;
+border:1px solid;
+">
+Resize Me
+</div>
+
+<p id="size"></p>
+
+<script>
+const observers =
+new ResizeObserver(entries=>{
+
+ let rect =
+ entries[0].contentRect;
+
+ size.innerText =
+ `W:${rect.width}
+  H:${rect.height}`;
+});
+
+observers.observe(box);
+
+setInterval(()=>{
+
+ if(!document.body.contains(box)){
+  observers.disconnect();
+ }
+
+},1000);
+</script>
+
+</body>
+</html>
